@@ -3,7 +3,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_cors import CORS
 import uuid
 import os
-from config import Config
+from backend.config import Config
 
 app = Flask(__name__, static_folder='../frontend', static_url_path='')
 app.config.from_object(Config)
