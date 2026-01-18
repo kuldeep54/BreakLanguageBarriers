@@ -1,0 +1,755 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-bg: #0F0F0F;
+    --accent-gold: #DCAB69;
+    --accent-red: #6E0C23;
+    --accent-brown: #774D23;
+    --text-light: #FFFFFF;
+    --text-gray: #B0B0B0;
+    --card-bg: #1A1A1A;
+    --hover-bg: #252525;
+    --meet-dark: #202124;
+    --meet-darker: #171717;
+}
+
+body {
+    font-family: 'Google Sans', 'Segoe UI', Roboto, Arial, sans-serif;
+    background-color: var(--primary-bg);
+    color: var(--text-light);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* Home Page Styles */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    padding: 40px 20px;
+    border-bottom: 2px solid var(--accent-gold);
+    margin-bottom: 40px;
+}
+
+header h1 {
+    font-size: 3rem;
+    color: var(--accent-gold);
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.tagline {
+    font-size: 1.2rem;
+    color: var(--text-gray);
+}
+
+.home-content {
+    padding: 20px;
+}
+
+.hero-section {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.hero-text {
+    text-align: center;
+}
+
+.hero-text h2 {
+    font-size: 2.5rem;
+    color: var(--accent-gold);
+    margin-bottom: 20px;
+}
+
+.hero-text p {
+    font-size: 1.2rem;
+    color: var(--text-gray);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.action-card {
+    background: var(--card-bg);
+    border: 2px solid var(--accent-brown);
+    border-radius: 15px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.action-card h3 {
+    color: var(--accent-gold);
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+}
+
+.primary-btn {
+    background: linear-gradient(135deg, var(--accent-gold), var(--accent-brown));
+    color: var(--text-light);
+    border: none;
+    padding: 15px 40px;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.primary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 171, 105, 0.4);
+}
+
+.primary-btn:active {
+    transform: translateY(0);
+}
+
+.btn-icon {
+    font-size: 1.5rem;
+}
+
+.meeting-link-container {
+    margin-top: 30px;
+    padding: 20px;
+    background: var(--hover-bg);
+    border-radius: 10px;
+}
+
+.success-message {
+    color: var(--accent-gold);
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+}
+
+.link-display {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.link-display input {
+    flex: 1;
+    padding: 12px;
+    background: var(--primary-bg);
+    border: 1px solid var(--accent-brown);
+    border-radius: 6px;
+    color: var(--text-light);
+    font-size: 1rem;
+}
+
+.secondary-btn {
+    background: var(--accent-red);
+    color: var(--text-light);
+    border: none;
+    padding: 12px 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.secondary-btn:hover {
+    background: #8B1030;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    margin-top: 60px;
+}
+
+.feature-item {
+    background: var(--card-bg);
+    border: 1px solid var(--accent-brown);
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+    border-color: var(--accent-gold);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(220, 171, 105, 0.2);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.feature-item h4 {
+    color: var(--accent-gold);
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+}
+
+.feature-item p {
+    color: var(--text-gray);
+}
+
+footer {
+    text-align: center;
+    padding: 30px;
+    margin-top: 60px;
+    border-top: 1px solid var(--accent-brown);
+    color: var(--text-gray);
+}
+
+/* Meeting Page Styles - Google Meet Like */
+.meeting-page {
+    overflow: hidden;
+    background: var(--meet-darker);
+}
+
+.meeting-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: relative;
+}
+
+.meeting-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    background: var(--meet-dark);
+    position: relative;
+    z-index: 10;
+    height: 60px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-left h1 {
+    font-size: 1.4rem;
+    color: var(--accent-gold);
+    font-weight: 500;
+}
+
+.meeting-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.meeting-id {
+    font-size: 0.85rem;
+    color: var(--text-gray);
+    background: rgba(255, 255, 255, 0.08);
+    padding: 6px 12px;
+    border-radius: 16px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.participant-count {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    background: rgba(255, 255, 255, 0.08);
+    padding: 6px 16px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.danger-btn {
+    background: var(--accent-red);
+    color: var(--text-light);
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.danger-btn:hover {
+    background: #8B1030;
+    transform: scale(1.02);
+}
+
+.meeting-main {
+    flex: 1;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+}
+
+.video-section {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+}
+
+.video-grid {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 16px;
+    align-content: center;
+    justify-content: center;
+}
+
+.video-container {
+    position: relative;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    aspect-ratio: 16/9;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.video-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--meet-dark) 0%, var(--primary-bg) 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.participant-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: var(--accent-gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: var(--primary-bg);
+    margin-bottom: 16px;
+}
+
+.participant-name {
+    color: var(--text-light);
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.placeholder-icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    opacity: 0.3;
+}
+
+.video-placeholder p {
+    color: var(--text-gray);
+    font-size: 1rem;
+}
+
+/* Transcription Sidebar */
+.transcription-sidebar {
+    width: 360px;
+    background: var(--meet-dark);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+}
+
+.transcription-sidebar.hidden {
+    transform: translateX(100%);
+}
+
+.sidebar-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sidebar-header h3 {
+    color: var(--text-light);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.close-sidebar {
+    background: none;
+    border: none;
+    color: var(--text-gray);
+    cursor: pointer;
+    font-size: 1.3rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.close-sidebar:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+}
+
+.transcription-controls {
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.language-select {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-light);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.language-select option {
+    background: var(--meet-dark);
+    color: var(--text-light);
+    padding: 8px;
+}
+
+.language-select:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.language-select:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+.transcription-content {
+    flex: 1;
+    padding: 16px 20px;
+    overflow-y: auto;
+}
+
+.transcription-placeholder {
+    color: var(--text-gray);
+    text-align: center;
+    padding: 40px 20px;
+    font-size: 0.9rem;
+}
+
+.transcription-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 3px solid var(--accent-gold);
+}
+
+.transcription-item.interim {
+    opacity: 0.6;
+    border-left-color: var(--text-gray);
+}
+
+.transcription-speaker {
+    font-weight: 600;
+    color: var(--accent-gold);
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+}
+
+.transcription-text {
+    color: var(--text-light);
+    line-height: 1.5;
+    font-size: 0.9rem;
+}
+
+/* Meeting Controls - Google Meet Style */
+.meeting-controls {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 16px;
+    padding: 16px 24px;
+    background: var(--meet-dark);
+    border-radius: 50px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+}
+
+.control-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    position: relative;
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.08);
+}
+
+.control-btn.active {
+    background: var(--text-light);
+}
+
+.control-btn.active .icon {
+    filter: brightness(0);
+}
+
+.control-btn.muted {
+    background: var(--accent-red);
+}
+
+.control-btn.muted .icon {
+    filter: brightness(0) invert(1);
+}
+
+.control-btn .icon {
+    font-size: 1.3rem;
+}
+
+.control-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: var(--text-light);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    margin-bottom: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.control-btn:hover .control-tooltip {
+    opacity: 1;
+}
+
+.leave-btn {
+    background: var(--accent-red);
+    width: 56px;
+    height: 56px;
+}
+
+.leave-btn:hover {
+    background: #8B1030;
+}
+
+.leave-btn .icon {
+    filter: brightness(0) invert(1);
+}
+
+.transcription-toggle {
+    width: 56px;
+    height: 56px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.transcription-toggle.active {
+    background: var(--accent-gold);
+}
+
+.transcription-toggle.active .icon {
+    filter: brightness(0);
+}
+
+/* Notification Styles */
+.notification {
+    position: fixed;
+    top: 80px;
+    right: 24px;
+    background: var(--meet-dark);
+    border-left: 4px solid var(--accent-gold);
+    border-radius: 8px;
+    padding: 16px 20px;
+    color: var(--text-light);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+    transform: translateX(400px);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    max-width: 320px;
+    font-size: 0.9rem;
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.notification.error {
+    border-left-color: var(--accent-red);
+}
+
+.notification.success {
+    border-left-color: var(--accent-gold);
+}
+
+/* Scrollbar Styles */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .transcription-sidebar {
+        position: absolute;
+        right: 0;
+        top: 60px;
+        height: calc(100vh - 60px);
+        z-index: 50;
+    }
+    
+    .video-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 2rem;
+    }
+
+    .hero-text h2 {
+        font-size: 1.8rem;
+    }
+
+    .action-card {
+        padding: 25px;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+    }
+
+    .meeting-header {
+        padding: 12px 16px;
+    }
+
+    .header-left h1 {
+        font-size: 1.1rem;
+    }
+
+    .participant-count {
+        font-size: 0.8rem;
+        padding: 4px 12px;
+    }
+
+    .transcription-sidebar {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .meeting-controls {
+        gap: 12px;
+        padding: 12px 16px;
+        bottom: 16px;
+    }
+
+    .control-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 1.2rem;
+    }
+
+    .video-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+.tts-toggle {
+    width: 56px;
+    height: 56px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.tts-toggle.active {
+    background: var(--accent-gold);
+}
+
+.tts-toggle.active .icon {
+    filter: brightness(0);
+}
+
+.transcription-item.own {
+    border-left-color: #4CAF50;
+}
+
+.control-label {
+    display: block;
+    color: var(--text-light);
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.tts-toggle {
+    width: 56px;
+    height: 56px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.tts-toggle.active {
+    background: var(--accent-gold);
+}
+
+.tts-toggle.active .icon {
+    filter: brightness(0);
+}
+
+.transcription-item.own {
+    border-left-color: #4CAF50;
+}
+
+.transcription-controls {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}

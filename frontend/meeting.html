@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnyTalk Meeting</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .local-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        .remote-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-overlay {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            z-index: 10;
+        }
+
+        .video-off-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--meet-dark);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 5;
+        }
+
+        .video-off-overlay.active {
+            display: flex;
+        }
+    </style>
+</head>
+<body class="meeting-page">
+    <div class="meeting-container">
+        <header class="meeting-header">
+            <div class="header-left">
+                <h1>AnyTalk</h1>
+                <div class="meeting-info">
+                    <span id="meetingId" class="meeting-id"></span>
+                    <span id="participantCount" class="participant-count">
+                        <span>👥</span>
+                        <span id="countNumber">1</span>
+                    </span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button id="leaveMeetingBtn" class="danger-btn">Leave</button>
+            </div>
+        </header>
+
+        <main class="meeting-main">
+            <div class="video-section">
+                <div class="video-grid" id="videoGrid">
+                    <div class="video-container" id="localVideoContainer">
+                        <video id="localVideo" class="local-video" autoplay muted playsinline></video>
+                        <div class="video-off-overlay" id="localVideoOff">
+                            <div class="participant-avatar">👤</div>
+                            <p class="participant-name">You</p>
+                        </div>
+                        <div class="video-overlay">You</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="transcription-sidebar hidden" id="transcriptionSidebar">
+                <div class="sidebar-header">
+                    <h3>Live Captions</h3>
+                    <button class="close-sidebar" id="closeSidebar">×</button>
+                </div>
+                <div class="transcription-controls">
+                    <label class="control-label">My Speaking Language:</label>
+                    <select id="recognitionLanguage" class="language-select">
+                        <option value="en">English</option>
+                        <option value="es">Spanish</option>
+                        <option value="fr">French</option>
+                        <option value="de">German</option>
+                        <option value="hi">Hindi</option>
+                        <option value="zh">Chinese</option>
+                        <option value="ja">Japanese</option>
+                        <option value="ar">Arabic</option>
+                        <option value="pt">Portuguese</option>
+                        <option value="ru">Russian</option>
+                    </select>
+                    
+                    <label class="control-label" style="margin-top: 12px;">Translate Captions To:</label>
+                    <select id="translationLanguage" class="language-select">
+                        <option value="none">Original Language</option>
+                        <option value="en">English</option>
+                        <option value="es">Spanish</option>
+                        <option value="fr">French</option>
+                        <option value="de">German</option>
+                        <option value="hi">Hindi</option>
+                        <option value="zh">Chinese</option>
+                        <option value="ja">Japanese</option>
+                        <option value="ar">Arabic</option>
+                        <option value="pt">Portuguese</option>
+                        <option value="ru">Russian</option>
+                    </select>
+                </div>
+                <div class="transcription-content" id="transcriptionContent">
+                    <p class="transcription-placeholder">Captions will appear here when someone speaks...</p>
+                </div>
+            </div>
+        </main>
+
+        <div class="meeting-controls">
+            <button id="micBtn" class="control-btn active" title="Microphone">
+                <span class="icon" id="micIcon">🎤</span>
+                <span class="control-tooltip">Mute</span>
+            </button>
+            <button id="videoBtn" class="control-btn active" title="Camera">
+                <span class="icon" id="videoIcon">📹</span>
+                <span class="control-tooltip">Turn off camera</span>
+            </button>
+            <button id="transcriptionToggle" class="control-btn transcription-toggle" title="Captions">
+                <span class="icon">💬</span>
+                <span class="control-tooltip">Turn on captions</span>
+            </button>
+            <button id="ttsToggle" class="control-btn tts-toggle" title="Text-to-Speech">
+                <span class="icon">🔊</span>
+                <span class="control-tooltip">Turn on audio</span>
+            </button>
+            <button id="shareScreenBtn" class="control-btn" title="Share Screen">
+                <span class="icon">🖥️</span>
+                <span class="control-tooltip">Present</span>
+            </button>
+            <button id="leaveBtn" class="control-btn leave-btn" title="Leave">
+                <span class="icon">📞</span>
+                <span class="control-tooltip">Leave call</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="js/meeting.js">
+    </script>
+</body>
+</html>

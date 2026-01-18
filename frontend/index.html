@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnyTalk - Real-time Meeting Platform</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AnyTalk</h1>
+            <p class="tagline">Connect, Speak, Understand - In Any Language</p>
+        </header>
+
+        <main class="home-content">
+            <div class="hero-section">
+                <div class="hero-text">
+                    <h2>Break Language Barriers in Real-Time</h2>
+                    <p>Experience seamless meetings with live transcription and translation. Speak in your language, understood in theirs.</p>
+                </div>
+
+                <div class="action-card">
+                    <h3>Start a Meeting</h3>
+                    <button id="createMeetingBtn" class="primary-btn">
+                        <span class="btn-icon">+</span>
+                        Generate Meeting Link
+                    </button>
+                    <div id="meetingLinkContainer" class="meeting-link-container" style="display: none;">
+                        <p class="success-message">Meeting created successfully!</p>
+                        <div class="link-display">
+                            <input type="text" id="meetingLink" readonly>
+                            <button id="copyLinkBtn" class="secondary-btn">Copy</button>
+                        </div>
+                        <button id="joinMeetingBtn" class="primary-btn">Join Meeting</button>
+                    </div>
+                </div>
+
+                <div class="features">
+                    <div class="feature-item">
+                        <div class="feature-icon">🎙️</div>
+                        <h4>Live Transcription</h4>
+                        <p>Real-time speech-to-text conversion as you speak</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🌍</div>
+                        <h4>Multi-Language</h4>
+                        <p>Translate transcriptions to your preferred language</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">👥</div>
+                        <h4>Easy Sharing</h4>
+                        <p>Share meeting links and connect instantly</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 AnyTalk. Breaking barriers, building connections.</p>
+        </footer>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script src="js/home.js"></script>
+</body>
+</html>
