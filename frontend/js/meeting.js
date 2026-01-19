@@ -15,6 +15,7 @@ let transcriptionHistory = [];
 let isRecognitionRunning = false;
 let recognitionLanguage = 'en-US';
 let availableVoices = [];
+let mySocketId = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -46,16 +47,19 @@ document.addEventListener('DOMContentLoaded', () => {
 function loadVoices() {
     availableVoices = speechSynthesis.getVoices();
     console.log('Available voices:', availableVoices.length);
-    availableVoices.forEach(voice => {
-        console.log(`${voice.name} - ${voice.lang}`);
-    });
 }
 
 function initializeSocketConnection() {
-    socket = io(API_URL);
+    socket = io(API_URL, {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
+    });
 
     socket.on('connect', () => {
-        console.log('Connected to server');
+        console.log('Connected to server with socket ID:', socket.id);
+        mySocketId = socket.id;
         socket.emit('join_meeting', {
             meeting_id: meetingId,
             username: 'User_' + Math.random().toString(36).substr(2, 9)
@@ -64,8 +68,21 @@ function initializeSocketConnection() {
 
     socket.on('meeting_joined', (data) => {
         console.log('Joined meeting:', data);
+        mySocketId = data.your_sid;
         updateParticipantCount(data.participant_count);
         showNotification('Connected to meeting', 'success');
+        
+        // Connect to existing participants
+        if (data.participants && data.participants.length > 0) {
+            console.log('Existing participants:', data.participants);
+            data.participants.forEach(participantSid => {
+                if (participantSid !== mySocketId) {
+                    setTimeout(() => {
+                        createPeerConnection(participantSid, true);
+                    }, 500);
+                }
+            });
+        }
     });
 
     socket.on('participant_joined', (data) => {
@@ -73,10 +90,9 @@ function initializeSocketConnection() {
         updateParticipantCount(data.participant_count);
         showNotification('Someone joined', 'success');
         
-        if (data.sid !== socket.id) {
-            setTimeout(() => {
-                addParticipantToGrid(data.sid, data.username);
-            }, 500);
+        if (data.sid !== mySocketId) {
+            addParticipantToGrid(data.sid, data.username);
+            // Don't create connection here, let the joiner initiate
         }
     });
 
@@ -89,6 +105,27 @@ function initializeSocketConnection() {
         if (peerConnections[data.sid]) {
             peerConnections[data.sid].close();
             delete peerConnections[data.sid];
+        }
+    });
+
+    socket.on('webrtc_offer', async (data) => {
+        console.log('Received offer from:', data.sender);
+        if (data.sender !== mySocketId) {
+            await handleWebRTCOffer(data.sender, data.offer);
+        }
+    });
+
+    socket.on('webrtc_answer', async (data) => {
+        console.log('Received answer from:', data.sender);
+        if (data.sender !== mySocketId && peerConnections[data.sender]) {
+            await handleWebRTCAnswer(data.sender, data.answer);
+        }
+    });
+
+    socket.on('webrtc_ice_candidate', async (data) => {
+        console.log('Received ICE candidate from:', data.sender);
+        if (data.sender !== mySocketId && peerConnections[data.sender]) {
+            await handleICECandidate(data.sender, data.candidate);
         }
     });
 
@@ -113,6 +150,158 @@ function initializeSocketConnection() {
         console.error('Socket error:', data);
         showNotification(data.message || 'An error occurred', 'error');
     });
+}
+
+function createPeerConnection(remoteSid, shouldCreateOffer) {
+    console.log('Creating peer connection with:', remoteSid, 'shouldCreateOffer:', shouldCreateOffer);
+    
+    if (peerConnections[remoteSid]) {
+        console.log('Peer connection already exists for:', remoteSid);
+        return peerConnections[remoteSid];
+    }
+
+    const configuration = {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+        ]
+    };
+
+    const peerConnection = new RTCPeerConnection(configuration);
+    peerConnections[remoteSid] = peerConnection;
+
+    // Add local stream tracks
+    if (localStream) {
+        localStream.getTracks().forEach(track => {
+            peerConnection.addTrack(track, localStream);
+            console.log('Added track to peer connection:', track.kind);
+        });
+    }
+
+    // Handle incoming tracks
+    peerConnection.ontrack = (event) => {
+        console.log('Received remote track from:', remoteSid);
+        const remoteStream = event.streams[0];
+        displayRemoteStream(remoteSid, remoteStream);
+    };
+
+    // Handle ICE candidates
+    peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+            console.log('Sending ICE candidate to:', remoteSid);
+            socket.emit('webrtc_ice_candidate', {
+                target: remoteSid,
+                candidate: event.candidate
+            });
+        }
+    };
+
+    peerConnection.onconnectionstatechange = () => {
+        console.log('Connection state with', remoteSid, ':', peerConnection.connectionState);
+        if (peerConnection.connectionState === 'failed' || 
+            peerConnection.connectionState === 'disconnected') {
+            console.log('Peer connection failed/disconnected:', remoteSid);
+        }
+    };
+
+    // Create offer if this peer should initiate
+    if (shouldCreateOffer) {
+        createAndSendOffer(remoteSid, peerConnection);
+    }
+
+    return peerConnection;
+}
+
+async function createAndSendOffer(remoteSid, peerConnection) {
+    try {
+        console.log('Creating offer for:', remoteSid);
+        const offer = await peerConnection.createOffer({
+            offerToReceiveAudio: true,
+            offerToReceiveVideo: true
+        });
+        await peerConnection.setLocalDescription(offer);
+        
+        console.log('Sending offer to:', remoteSid);
+        socket.emit('webrtc_offer', {
+            meeting_id: meetingId,
+            target: remoteSid,
+            offer: offer
+        });
+    } catch (error) {
+        console.error('Error creating offer:', error);
+    }
+}
+
+async function handleWebRTCOffer(remoteSid, offer) {
+    try {
+        console.log('Handling offer from:', remoteSid);
+        
+        let peerConnection = peerConnections[remoteSid];
+        if (!peerConnection) {
+            peerConnection = createPeerConnection(remoteSid, false);
+            addParticipantToGrid(remoteSid, 'User');
+        }
+
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+        
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        
+        console.log('Sending answer to:', remoteSid);
+        socket.emit('webrtc_answer', {
+            target: remoteSid,
+            answer: answer
+        });
+    } catch (error) {
+        console.error('Error handling offer:', error);
+    }
+}
+
+async function handleWebRTCAnswer(remoteSid, answer) {
+    try {
+        console.log('Handling answer from:', remoteSid);
+        const peerConnection = peerConnections[remoteSid];
+        if (peerConnection) {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+        }
+    } catch (error) {
+        console.error('Error handling answer:', error);
+    }
+}
+
+async function handleICECandidate(remoteSid, candidate) {
+    try {
+        const peerConnection = peerConnections[remoteSid];
+        if (peerConnection) {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            console.log('Added ICE candidate from:', remoteSid);
+        }
+    } catch (error) {
+        console.error('Error adding ICE candidate:', error);
+    }
+}
+
+function displayRemoteStream(remoteSid, stream) {
+    console.log('Displaying remote stream for:', remoteSid);
+    let participantElement = document.getElementById(`participant-${remoteSid}`);
+    
+    if (!participantElement) {
+        addParticipantToGrid(remoteSid, 'User');
+        participantElement = document.getElementById(`participant-${remoteSid}`);
+    }
+
+    if (participantElement) {
+        const video = participantElement.querySelector('video');
+        if (video) {
+            video.srcObject = stream;
+            video.play().catch(e => console.error('Error playing remote video:', e));
+            
+            const videoOffOverlay = participantElement.querySelector('.video-off-overlay');
+            if (videoOffOverlay) {
+                videoOffOverlay.classList.remove('active');
+            }
+        }
+    }
 }
 
 async function initializeMediaDevices() {
@@ -317,6 +506,11 @@ function restartRecognition() {
 function addParticipantToGrid(sid, username) {
     const videoGrid = document.getElementById('videoGrid');
     
+    if (document.getElementById(`participant-${sid}`)) {
+        console.log('Participant already in grid:', sid);
+        return;
+    }
+    
     const videoContainer = document.createElement('div');
     videoContainer.className = 'video-container';
     videoContainer.id = `participant-${sid}`;
@@ -487,7 +681,6 @@ async function retranslateAllHistory() {
 
 function speakText(text) {
     if (!ttsEnabled || !text.trim()) {
-        console.log('TTS not enabled or empty text');
         return;
     }
     
@@ -533,47 +726,21 @@ function speakText(text) {
     
     if (selectedVoice) {
         currentUtterance.voice = selectedVoice;
-        console.log('Using voice:', selectedVoice.name, selectedVoice.lang);
     }
     
     currentUtterance.rate = 1.0;
     currentUtterance.pitch = 1.0;
     currentUtterance.volume = 1.0;
     
-    currentUtterance.onstart = () => {
-        console.log('Speech started:', text);
-    };
-    
     currentUtterance.onend = () => {
         console.log('Speech ended');
     };
     
     currentUtterance.onerror = (event) => {
-        console.error('Speech synthesis error:', event.error, event);
+        console.error('Speech synthesis error:', event.error);
     };
     
-    console.log('Speaking text:', text);
     speechSynthesis.speak(currentUtterance);
-    
-    setTimeout(() => {
-        if (!speechSynthesis.speaking) {
-            console.log('Speech didn\'t start, retrying...');
-            speechSynthesis.speak(currentUtterance);
-        }
-    }, 100);
-}
-
-function testSpeech() {
-    const testUtterance = new SpeechSynthesisUtterance('Testing text to speech');
-    testUtterance.volume = 1.0;
-    testUtterance.rate = 1.0;
-    testUtterance.pitch = 1.0;
-    
-    testUtterance.onstart = () => console.log('Test speech started');
-    testUtterance.onend = () => console.log('Test speech ended');
-    testUtterance.onerror = (e) => console.error('Test speech error:', e);
-    
-    speechSynthesis.speak(testUtterance);
 }
 
 function setupEventListeners() {
@@ -756,7 +923,6 @@ function setupEventListeners() {
                 ttsToggle.querySelector('.control-tooltip').textContent = 'Turn off audio';
                 
                 loadVoices();
-                testSpeech();
                 
                 if (selectedLanguage === 'none') {
                     showNotification('TTS enabled, but you must select a translation language for it to work', 'error');
