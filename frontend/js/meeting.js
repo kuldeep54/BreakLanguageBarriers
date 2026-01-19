@@ -79,7 +79,7 @@ function initializeSocketConnection() {
                 if (participantSid !== mySocketId) {
                     setTimeout(() => {
                         createPeerConnection(participantSid, true);
-                    }, 500);
+                    }, 1000);
                 }
             });
         }
@@ -92,7 +92,6 @@ function initializeSocketConnection() {
         
         if (data.sid !== mySocketId) {
             addParticipantToGrid(data.sid, data.username);
-            // Don't create connection here, let the joiner initiate
         }
     });
 
@@ -163,26 +162,33 @@ function createPeerConnection(remoteSid, shouldCreateOffer) {
     const configuration = {
         iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' }
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
         ]
     };
 
     const peerConnection = new RTCPeerConnection(configuration);
     peerConnections[remoteSid] = peerConnection;
 
-    // Add local stream tracks
+    // Add local stream tracks with proper constraints
     if (localStream) {
         localStream.getTracks().forEach(track => {
-            peerConnection.addTrack(track, localStream);
-            console.log('Added track to peer connection:', track.kind);
+            const sender = peerConnection.addTrack(track, localStream);
+            console.log('Added track to peer connection:', track.kind, 'enabled:', track.enabled);
+            
+            // Ensure track is enabled
+            track.enabled = (track.kind === 'audio' ? isMicOn : isVideoOn);
         });
     }
 
     // Handle incoming tracks
     peerConnection.ontrack = (event) => {
-        console.log('Received remote track from:', remoteSid);
+        console.log('Received remote track from:', remoteSid, 'kind:', event.track.kind);
         const remoteStream = event.streams[0];
-        displayRemoteStream(remoteSid, remoteStream);
+        
+        if (remoteStream) {
+            displayRemoteStream(remoteSid, remoteStream);
+        }
     };
 
     // Handle ICE candidates
@@ -194,19 +200,35 @@ function createPeerConnection(remoteSid, shouldCreateOffer) {
                 candidate: event.candidate
             });
         }
-    };
+    });
 
     peerConnection.onconnectionstatechange = () => {
         console.log('Connection state with', remoteSid, ':', peerConnection.connectionState);
-        if (peerConnection.connectionState === 'failed' || 
+        if (peerConnection.connectionState === 'connected') {
+            showNotification('Connected to participant', 'success');
+        } else if (peerConnection.connectionState === 'failed' || 
             peerConnection.connectionState === 'disconnected') {
             console.log('Peer connection failed/disconnected:', remoteSid);
+            
+            // Try to reconnect
+            setTimeout(() => {
+                if (peerConnection.connectionState === 'failed') {
+                    console.log('Attempting to restart ICE for:', remoteSid);
+                    peerConnection.restartIce();
+                }
+            }, 1000);
         }
+    };
+
+    peerConnection.oniceconnectionstatechange = () => {
+        console.log('ICE connection state with', remoteSid, ':', peerConnection.iceConnectionState);
     };
 
     // Create offer if this peer should initiate
     if (shouldCreateOffer) {
-        createAndSendOffer(remoteSid, peerConnection);
+        setTimeout(() => {
+            createAndSendOffer(remoteSid, peerConnection);
+        }, 500);
     }
 
     return peerConnection;
@@ -272,9 +294,11 @@ async function handleWebRTCAnswer(remoteSid, answer) {
 async function handleICECandidate(remoteSid, candidate) {
     try {
         const peerConnection = peerConnections[remoteSid];
-        if (peerConnection) {
+        if (peerConnection && peerConnection.remoteDescription) {
             await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
             console.log('Added ICE candidate from:', remoteSid);
+        } else {
+            console.log('Waiting for remote description before adding ICE candidate');
         }
     } catch (error) {
         console.error('Error adding ICE candidate:', error);
@@ -296,9 +320,31 @@ function displayRemoteStream(remoteSid, stream) {
             video.srcObject = stream;
             video.play().catch(e => console.error('Error playing remote video:', e));
             
+            // Check if video track exists and is enabled
+            const videoTrack = stream.getVideoTracks()[0];
+            const audioTrack = stream.getAudioTracks()[0];
+            
+            console.log('Remote stream tracks - Video:', videoTrack ? videoTrack.enabled : 'none', 
+                       'Audio:', audioTrack ? audioTrack.enabled : 'none');
+            
+            // Hide video-off overlay if video track is present and enabled
             const videoOffOverlay = participantElement.querySelector('.video-off-overlay');
             if (videoOffOverlay) {
-                videoOffOverlay.classList.remove('active');
+                if (videoTrack && videoTrack.enabled) {
+                    videoOffOverlay.classList.remove('active');
+                } else {
+                    videoOffOverlay.classList.add('active');
+                }
+            }
+            
+            // Listen for track enabled/disabled events
+            if (videoTrack) {
+                videoTrack.onended = () => {
+                    console.log('Remote video track ended');
+                    if (videoOffOverlay) {
+                        videoOffOverlay.classList.add('active');
+                    }
+                };
             }
         }
     }
@@ -328,6 +374,8 @@ async function initializeMediaDevices() {
         startAudioStreaming();
 
         console.log('Media devices initialized');
+        console.log('Local tracks - Video:', localStream.getVideoTracks()[0]?.enabled, 
+                   'Audio:', localStream.getAudioTracks()[0]?.enabled);
         showNotification('Camera and microphone ready', 'success');
     } catch (error) {
         console.error('Error accessing media devices:', error);
@@ -765,6 +813,16 @@ function setupEventListeners() {
             }
         }
         
+        // Update all peer connections
+        Object.values(peerConnections).forEach(pc => {
+            const senders = pc.getSenders();
+            senders.forEach(sender => {
+                if (sender.track && sender.track.kind === 'audio') {
+                    sender.track.enabled = isMicOn;
+                }
+            });
+        });
+        
         if (isMicOn) {
             micBtn.classList.add('active');
             micBtn.classList.remove('muted');
@@ -805,6 +863,16 @@ function setupEventListeners() {
                 videoTrack.enabled = isVideoOn;
             }
         }
+        
+        // Update all peer connections
+        Object.values(peerConnections).forEach(pc => {
+            const senders = pc.getSenders();
+            senders.forEach(sender => {
+                if (sender.track && sender.track.kind === 'video') {
+                    sender.track.enabled = isVideoOn;
+                }
+            });
+        });
         
         if (isVideoOn) {
             videoBtn.classList.add('active');
