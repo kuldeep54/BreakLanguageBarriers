@@ -72,18 +72,22 @@ def handle_join_meeting(data):
     
     meeting_participants[meeting_id].append(request.sid)
     
-    # Notify others in the room
+    # Get list of existing participants (excluding the new joiner)
+    existing_participants = [sid for sid in meeting_participants[meeting_id] if sid != request.sid]
+    
+    # Notify others in the room about new participant
     emit('participant_joined', {
         'sid': request.sid,
         'username': username,
         'participant_count': len(meeting_participants[meeting_id])
-    }, room=meeting_id)
+    }, room=meeting_id, skip_sid=request.sid)
     
-    # Send current participants to the new user
+    # Send current participants list to the new user
     emit('meeting_joined', {
         'meeting_id': meeting_id,
-        'participants': meeting_participants[meeting_id],
-        'participant_count': len(meeting_participants[meeting_id])
+        'participants': existing_participants,
+        'participant_count': len(meeting_participants[meeting_id]),
+        'your_sid': request.sid
     })
 
 @socketio.on('leave_meeting')
@@ -130,6 +134,7 @@ def handle_webrtc_offer(data):
     target_sid = data.get('target')
     offer = data.get('offer')
     
+    print(f'Forwarding offer from {request.sid} to {target_sid}')
     emit('webrtc_offer', {
         'offer': offer,
         'sender': request.sid
@@ -140,6 +145,7 @@ def handle_webrtc_answer(data):
     target_sid = data.get('target')
     answer = data.get('answer')
     
+    print(f'Forwarding answer from {request.sid} to {target_sid}')
     emit('webrtc_answer', {
         'answer': answer,
         'sender': request.sid
@@ -150,6 +156,7 @@ def handle_ice_candidate(data):
     target_sid = data.get('target')
     candidate = data.get('candidate')
     
+    print(f'Forwarding ICE candidate from {request.sid} to {target_sid}')
     emit('webrtc_ice_candidate', {
         'candidate': candidate,
         'sender': request.sid
