@@ -53,7 +53,8 @@ def handle_disconnect():
         if request.sid in meeting_participants[meeting_id]:
             meeting_participants[meeting_id].remove(request.sid)
             emit('participant_left', {
-                'sid': request.sid
+                'sid': request.sid,
+                'participant_count': len(meeting_participants[meeting_id])
             }, room=meeting_id, skip_sid=request.sid)
 
 @socketio.on('join_meeting')
