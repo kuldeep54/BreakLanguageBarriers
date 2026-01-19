@@ -3,12 +3,12 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_cors import CORS
 import uuid
 import os
-from backend.config import Config
+from config import Config
 
 app = Flask(__name__, static_folder='../frontend', static_url_path='')
 app.config.from_object(Config)
 CORS(app, resources={r"/*": {"origins": "*"}})
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet', logger=True, engineio_logger=True)
 
 # Store active meetings and participants
 active_meetings = {}
@@ -157,4 +157,4 @@ def handle_ice_candidate(data):
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    socketio.run(app, host='0.0.0.0', port=port, debug=True)
+    socketio.run(app, host='0.0.0.0', port=port, debug=False)
